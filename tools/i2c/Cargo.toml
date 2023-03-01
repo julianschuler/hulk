@@ -1,0 +1,9 @@
+[package]
+name = "i2c"
+version = "0.2.0"
+edition = "2021"
+license = "GPL-3.0-only"
+homepage = "https://github.com/hulks/hulk"
+
+[dependencies]
+i2c-linux = "0.1.2"

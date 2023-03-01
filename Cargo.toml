@@ -34,6 +34,7 @@ members = [
 exclude = [
   "tools/aliveness",
   "tools/hula",
+  "tools/i2c",
 ]
 
 [workspace.dependencies]
