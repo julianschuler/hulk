@@ -46,8 +46,45 @@ impl LedInterface {
     }
 }
 
+struct TouchSensorInterface {
+    i2c: I2c<File>,
+}
+
+impl TouchSensorInterface {
+    fn initialize() -> Result<Self, io::Error> {
+        let mut i2c = I2c::from_path("/dev/i2c-head")?;
+        i2c.smbus_set_slave_address(0x50 >> 1, false)?;
+
+        // Clear touch interupt flag
+        i2c.smbus_write_byte_data(0x00, 0x00).unwrap();
+        // Disable multitouch circutry
+        i2c.smbus_write_byte_data(0x2A, 0x00).unwrap();
+        // Set sensitivity multiplier to 64x, data scaling factor to 1x
+        i2c.smbus_write_byte_data(0x1F, 0x10).unwrap();
+        // Set sensor input thresholds to 40
+        i2c.smbus_write_byte_data(0x30, 0x28).unwrap();
+        i2c.smbus_write_byte_data(0x31, 0x28).unwrap();
+        i2c.smbus_write_byte_data(0x32, 0x28).unwrap();
+        // Enable RF noise filtering
+        i2c.smbus_write_byte_data(0x44, 0x44).unwrap();
+        // Capacity calibration on all channels
+        i2c.smbus_write_byte_data(0x26, 0x07).unwrap();
+        while i2c.smbus_read_byte_data(0x26).unwrap() != 0 {}
+
+        Ok(Self { i2c })
+    }
+
+    fn read(&mut self) -> Result<(bool, bool, bool), io::Error> {
+        let output = self.i2c.smbus_read_byte_data(0x03).unwrap();
+        // Clear touch interupt flag
+        self.i2c.smbus_write_byte_data(0x00, 0x00).unwrap();
+        Ok((output & 0b1 != 0, output & 0b10 != 0, output & 0b100 != 0))
+    }
+}
+
 fn main() -> io::Result<()> {
     let mut leds = LedInterface::initialize(LedAddress::EyeRed).unwrap();
+    let mut touch = TouchSensorInterface::initialize().unwrap();
 
     let mut vals = [0; 16];
 
@@ -57,6 +94,8 @@ fn main() -> io::Result<()> {
             vals[(i + 1) % 16] = 0xFF;
             leds.write_leds(&vals).unwrap();
             sleep(Duration::from_millis(100));
+            let vals = touch.read().unwrap();
+            dbg!(vals);
         }
     }
 }
