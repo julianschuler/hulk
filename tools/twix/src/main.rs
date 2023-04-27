@@ -24,7 +24,7 @@ use nao::Nao;
 use panel::Panel;
 use panels::{
     BehaviorSimulatorPanel, ImagePanel, ImageSegmentsPanel, ManualCalibrationPanel, MapPanel,
-    ParameterPanel, PlotPanel, TextPanel,
+    ParameterPanel, PlotPanel, SpectrumPanel, TextPanel,
 };
 use serde_json::{from_str, to_string, Value};
 use tokio::sync::mpsc;
@@ -74,6 +74,7 @@ enum SelectablePanel {
     Map(MapPanel),
     Parameter(ParameterPanel),
     Plot(PlotPanel),
+    Spectrum(SpectrumPanel),
     Text(TextPanel),
 }
 
@@ -101,6 +102,7 @@ impl SelectablePanel {
             "map" => SelectablePanel::Map(MapPanel::new(nao, value)),
             "parameter" => SelectablePanel::Parameter(ParameterPanel::new(nao, value)),
             "plot" => SelectablePanel::Plot(PlotPanel::new(nao, value)),
+            "spectrum" => SelectablePanel::Spectrum(SpectrumPanel::new(nao, value)),
             "text" => SelectablePanel::Text(TextPanel::new(nao, value)),
             name => bail!("unexpected panel name: {name}"),
         })
@@ -115,6 +117,7 @@ impl SelectablePanel {
             SelectablePanel::Map(panel) => panel.save(),
             SelectablePanel::Parameter(panel) => panel.save(),
             SelectablePanel::Plot(panel) => panel.save(),
+            SelectablePanel::Spectrum(panel) => panel.save(),
             SelectablePanel::Text(panel) => panel.save(),
         };
         value["_panel_type"] = Value::String(self.to_string());
@@ -133,6 +136,7 @@ impl Widget for &mut SelectablePanel {
             SelectablePanel::Map(panel) => panel.ui(ui),
             SelectablePanel::Parameter(panel) => panel.ui(ui),
             SelectablePanel::Plot(panel) => panel.ui(ui),
+            SelectablePanel::Spectrum(panel) => panel.ui(ui),
             SelectablePanel::Text(panel) => panel.ui(ui),
         }
     }
@@ -148,6 +152,7 @@ impl Display for SelectablePanel {
             SelectablePanel::Map(_) => MapPanel::NAME,
             SelectablePanel::Parameter(_) => ParameterPanel::NAME,
             SelectablePanel::Plot(_) => PlotPanel::NAME,
+            SelectablePanel::Spectrum(_) => SpectrumPanel::NAME,
             SelectablePanel::Text(_) => TextPanel::NAME,
         };
         f.write_str(panel_name)
@@ -274,6 +279,7 @@ impl App for TwixApp {
                         "Map".to_string(),
                         "Parameter".to_string(),
                         "Plot".to_string(),
+                        "Spectrum".to_string(),
                         "Text".to_string(),
                     ],
                 )

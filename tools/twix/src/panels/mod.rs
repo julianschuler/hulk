@@ -5,6 +5,7 @@ mod manual_camera_calibration;
 mod map;
 mod parameter;
 mod plot;
+mod spectrum;
 mod text;
 
 pub use self::behavior_simulator::BehaviorSimulatorPanel;
@@ -14,4 +15,5 @@ pub use manual_camera_calibration::ManualCalibrationPanel;
 pub use map::MapPanel;
 pub use parameter::ParameterPanel;
 pub use plot::PlotPanel;
+pub use spectrum::SpectrumPanel;
 pub use text::TextPanel;
