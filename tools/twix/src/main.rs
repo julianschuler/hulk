@@ -68,13 +68,13 @@ fn main() -> Result<(), eframe::Error> {
 #[allow(clippy::large_enum_variant)]
 enum SelectablePanel {
     BehaviorSimulator(BehaviorSimulatorPanel),
-    Text(TextPanel),
-    Plot(PlotPanel),
     Image(ImagePanel),
     ImageSegments(ImageSegmentsPanel),
+    ManualCalibration(ManualCalibrationPanel),
     Map(MapPanel),
     Parameter(ParameterPanel),
-    ManualCalibration(ManualCalibrationPanel),
+    Plot(PlotPanel),
+    Text(TextPanel),
 }
 
 impl SelectablePanel {
@@ -93,15 +93,15 @@ impl SelectablePanel {
             "behavior simulator" => {
                 SelectablePanel::BehaviorSimulator(BehaviorSimulatorPanel::new(nao, value))
             }
-            "text" => SelectablePanel::Text(TextPanel::new(nao, value)),
-            "plot" => SelectablePanel::Plot(PlotPanel::new(nao, value)),
             "image" => SelectablePanel::Image(ImagePanel::new(nao, value)),
             "image segments" => SelectablePanel::ImageSegments(ImageSegmentsPanel::new(nao, value)),
-            "map" => SelectablePanel::Map(MapPanel::new(nao, value)),
-            "parameter" => SelectablePanel::Parameter(ParameterPanel::new(nao, value)),
             "manual calibration" => {
                 SelectablePanel::ManualCalibration(ManualCalibrationPanel::new(nao, value))
             }
+            "map" => SelectablePanel::Map(MapPanel::new(nao, value)),
+            "parameter" => SelectablePanel::Parameter(ParameterPanel::new(nao, value)),
+            "plot" => SelectablePanel::Plot(PlotPanel::new(nao, value)),
+            "text" => SelectablePanel::Text(TextPanel::new(nao, value)),
             name => bail!("unexpected panel name: {name}"),
         })
     }
@@ -109,13 +109,13 @@ impl SelectablePanel {
     fn save(&self) -> Value {
         let mut value = match self {
             SelectablePanel::BehaviorSimulator(panel) => panel.save(),
-            SelectablePanel::Text(panel) => panel.save(),
-            SelectablePanel::Plot(panel) => panel.save(),
             SelectablePanel::Image(panel) => panel.save(),
             SelectablePanel::ImageSegments(panel) => panel.save(),
+            SelectablePanel::ManualCalibration(panel) => panel.save(),
             SelectablePanel::Map(panel) => panel.save(),
             SelectablePanel::Parameter(panel) => panel.save(),
-            SelectablePanel::ManualCalibration(panel) => panel.save(),
+            SelectablePanel::Plot(panel) => panel.save(),
+            SelectablePanel::Text(panel) => panel.save(),
         };
         value["_panel_type"] = Value::String(self.to_string());
 
@@ -127,13 +127,13 @@ impl Widget for &mut SelectablePanel {
     fn ui(self, ui: &mut Ui) -> eframe::egui::Response {
         match self {
             SelectablePanel::BehaviorSimulator(panel) => panel.ui(ui),
-            SelectablePanel::Text(panel) => panel.ui(ui),
-            SelectablePanel::Plot(panel) => panel.ui(ui),
             SelectablePanel::Image(panel) => panel.ui(ui),
             SelectablePanel::ImageSegments(panel) => panel.ui(ui),
+            SelectablePanel::ManualCalibration(panel) => panel.ui(ui),
             SelectablePanel::Map(panel) => panel.ui(ui),
             SelectablePanel::Parameter(panel) => panel.ui(ui),
-            SelectablePanel::ManualCalibration(panel) => panel.ui(ui),
+            SelectablePanel::Plot(panel) => panel.ui(ui),
+            SelectablePanel::Text(panel) => panel.ui(ui),
         }
     }
 }
@@ -142,13 +142,13 @@ impl Display for SelectablePanel {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let panel_name = match self {
             SelectablePanel::BehaviorSimulator(_) => BehaviorSimulatorPanel::NAME,
-            SelectablePanel::Text(_) => TextPanel::NAME,
-            SelectablePanel::Plot(_) => PlotPanel::NAME,
             SelectablePanel::Image(_) => ImagePanel::NAME,
             SelectablePanel::ImageSegments(_) => ImageSegmentsPanel::NAME,
+            SelectablePanel::ManualCalibration(_) => ManualCalibrationPanel::NAME,
             SelectablePanel::Map(_) => MapPanel::NAME,
             SelectablePanel::Parameter(_) => ParameterPanel::NAME,
-            SelectablePanel::ManualCalibration(_) => ManualCalibrationPanel::NAME,
+            SelectablePanel::Plot(_) => PlotPanel::NAME,
+            SelectablePanel::Text(_) => TextPanel::NAME,
         };
         f.write_str(panel_name)
     }
@@ -268,13 +268,13 @@ impl App for TwixApp {
                     &mut self.panel_selection,
                     vec![
                         "Behavior Simulator".to_string(),
-                        "Text".to_string(),
-                        "Plot".to_string(),
-                        "Image".to_string(),
                         "Image Segments".to_string(),
+                        "Image".to_string(),
+                        "Manual Calibration".to_string(),
                         "Map".to_string(),
                         "Parameter".to_string(),
-                        "Manual Calibration".to_string(),
+                        "Plot".to_string(),
+                        "Text".to_string(),
                     ],
                 )
                 .ui(ui);
