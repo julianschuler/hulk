@@ -12,7 +12,8 @@ use communication::client::ConnectionStatus;
 use completion_edit::CompletionEdit;
 use eframe::{
     egui::{
-        CentralPanel, Context, Key, Modifiers, TopBottomPanel, Ui, Visuals, Widget, WidgetText,
+        CentralPanel, Context, Key, Modifiers, Response, TopBottomPanel, Ui, Visuals, Widget,
+        WidgetText,
     },
     epaint::Color32,
     run_native, App, CreationContext, Frame, NativeOptions, Storage,
@@ -127,7 +128,7 @@ impl SelectablePanel {
 }
 
 impl Widget for &mut SelectablePanel {
-    fn ui(self, ui: &mut Ui) -> eframe::egui::Response {
+    fn ui(self, ui: &mut Ui) -> Response {
         match self {
             SelectablePanel::BehaviorSimulator(panel) => panel.ui(ui),
             SelectablePanel::Image(panel) => panel.ui(ui),
@@ -367,7 +368,7 @@ impl egui_dock::TabViewer for TabViewer {
         tab.ui(ui);
     }
 
-    fn title(&mut self, tab: &mut Self::Tab) -> eframe::egui::WidgetText {
+    fn title(&mut self, tab: &mut Self::Tab) -> WidgetText {
         format!("{tab}").into()
     }
 
