@@ -382,6 +382,10 @@ impl Behavior {
                 .fill_if_subscribed(|| dribble_path_obstacles.unwrap_or_default())
         }
 
+        if !matches!(action, Action::SearchForLostBall) {
+            self.current_turning_direction = None
+        }
+
         Ok(MainOutputs {
             motion_command: motion_command.into(),
             dribble_path: dribble_path.into(),
