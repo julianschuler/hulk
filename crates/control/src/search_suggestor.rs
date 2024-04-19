@@ -38,6 +38,7 @@ pub struct CycleContext {
 #[derive(Default)]
 pub struct MainOutputs {
     pub suggested_search_position: MainOutput<Option<Point2<Field>>>,
+    pub heatmap_center_of_mass: MainOutput<Point2<Field>>,
 }
 
 impl SearchSuggestor {
@@ -73,8 +74,11 @@ impl SearchSuggestor {
             .heatmap
             .fill_if_subscribed(|| self.heatmap.map.clone());
 
+        let heatmap_center_of_mass = self.heatmap.get_center_of_mass();
+
         Ok(MainOutputs {
             suggested_search_position: suggested_search_position.into(),
+            heatmap_center_of_mass: heatmap_center_of_mass.into(),
         })
     }
 
@@ -121,19 +125,35 @@ impl Heatmap {
         )
     }
 
+    fn heatmap_to_field(&self, heatmap_point: (usize, usize)) -> Point2<Field> {
+        point![
+            ((heatmap_point.0 as f32 + 1.0 / 2.0) / self.cells_per_meter
+                - self.field_dimensions.length / 2.0),
+            ((heatmap_point.1 as f32 + 1.0 / 2.0) / self.cells_per_meter
+                - self.field_dimensions.width / 2.0)
+        ]
+    }
+
     fn get_maximum_position(&self, minimum_validity: f32) -> Option<Point2<Field>> {
         let maximum_heat_heatmap_position = self.map.iamax_full();
 
         if self.map[maximum_heat_heatmap_position] > minimum_validity {
-            let search_suggestion = point![
-                ((maximum_heat_heatmap_position.0 as f32 + 1.0 / 2.0) / self.cells_per_meter
-                    - self.field_dimensions.length / 2.0),
-                ((maximum_heat_heatmap_position.1 as f32 + 1.0 / 2.0) / self.cells_per_meter
-                    - self.field_dimensions.width / 2.0)
-            ];
-            return Some(search_suggestion);
+            Some(self.heatmap_to_field(maximum_heat_heatmap_position))
+        } else {
+            None
         }
-        None
+    }
+
+    fn get_center_of_mass(&self) -> Point2<Field> {
+        let mut center_of_mass = Point2::origin();
+
+        for row in 0..self.map.nrows() {
+            for (column, &value) in self.map.row(row).into_iter().enumerate() {
+                center_of_mass += self.heatmap_to_field((row, column)).coords() * value;
+            }
+        }
+
+        center_of_mass
     }
 }
 
