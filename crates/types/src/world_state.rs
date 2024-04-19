@@ -1,5 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use geometry::direction::Direction;
 use serde::{Deserialize, Serialize};
 
 use coordinate_systems::{Field, Ground};
@@ -24,6 +25,7 @@ pub struct WorldState {
     pub rule_obstacles: Vec<RuleObstacle>,
     pub position_of_interest: Point2<Ground>,
     pub suggested_search_position: Option<Point2<Field>>,
+    pub suggested_search_direction: Direction,
     pub kick_decisions: Option<Vec<KickDecision>>,
     pub instant_kick_decisions: Option<Vec<KickDecision>>,
     pub robot: RobotState,

@@ -1,5 +1,6 @@
 use coordinate_systems::{Field, Ground};
 use framework::AdditionalOutput;
+use geometry::direction::Direction;
 use linear_algebra::{point, Isometry2, Orientation2, Point2, Pose2};
 use types::{
     field_dimensions::FieldDimensions,
@@ -72,6 +73,7 @@ pub fn execute(
     parameters: &SearchParameters,
     path_obstacles_output: &mut AdditionalOutput<Vec<PathObstacle>>,
     previous_role: Role,
+    current_turning_direction: &mut Option<Direction>,
 ) -> Option<MotionCommand> {
     let ground_to_field = world_state.robot.ground_to_field?;
     let search_role = assign_search_role(world_state);
@@ -113,7 +115,13 @@ pub fn execute(
         let path_length: f32 = path.iter().map(|segment| segment.length()).sum();
         let is_reached = path_length < parameters.position_reached_distance;
         let orientation_mode = if is_reached {
-            OrientationMode::Override(Orientation2::new(parameters.rotation_per_step))
+            let direction =
+                current_turning_direction.get_or_insert(world_state.suggested_search_direction);
+            let sign = match direction {
+                Direction::Clockwise => 1.0,
+                _ => -1.0,
+            };
+            OrientationMode::Override(Orientation2::new(sign * parameters.rotation_per_step))
         } else {
             OrientationMode::AlignWithPath
         };

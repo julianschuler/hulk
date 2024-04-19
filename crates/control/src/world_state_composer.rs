@@ -2,6 +2,7 @@ use color_eyre::Result;
 use context_attribute::context;
 use coordinate_systems::{Field, Ground};
 use framework::MainOutput;
+use geometry::direction::Direction;
 use linear_algebra::{Isometry2, Point2};
 use serde::{Deserialize, Serialize};
 use spl_network_messages::PlayerNumber;
@@ -33,6 +34,7 @@ pub struct CycleContext {
         Input<Option<FilteredGameControllerState>, "filtered_game_controller_state?">,
     ground_to_field: Input<Option<Isometry2<Ground, Field>>, "ground_to_field?">,
     suggested_search_position: Input<Option<Point2<Field>>, "suggested_search_position?">,
+    suggested_search_direction: Input<Direction, "suggested_search_direction">,
     kick_decisions: Input<Option<Vec<KickDecision>>, "kick_decisions?">,
     instant_kick_decisions: Input<Option<Vec<KickDecision>>, "instant_kick_decisions?">,
 
@@ -72,6 +74,7 @@ impl WorldStateComposer {
             ball: context.ball.copied(),
             rule_ball: context.rule_ball.copied(),
             suggested_search_position: context.suggested_search_position.copied(),
+            suggested_search_direction: context.suggested_search_direction.clone(),
             obstacles: context.obstacles.clone(),
             rule_obstacles: context.rule_obstacles.clone(),
             position_of_interest: *context.position_of_interest,

@@ -1,11 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 use linear_algebra::{vector, Vector2};
+use serialize_hierarchy::SerializeHierarchy;
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(
+    Clone, Copy, Default, Debug, Deserialize, Eq, PartialEq, Serialize, SerializeHierarchy,
+)]
 pub enum Direction {
     Clockwise,
     Counterclockwise,
+    #[default]
     Colinear,
 }
 

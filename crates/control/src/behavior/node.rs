@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use color_eyre::Result;
+use geometry::direction::Direction;
 use serde::{Deserialize, Serialize};
 
 use context_attribute::context;
@@ -46,6 +47,7 @@ pub struct Behavior {
     last_known_ball_position: Point2<Field>,
     active_since: Option<SystemTime>,
     previous_role: Role,
+    current_turning_direction: Option<Direction>,
 }
 
 #[context]
@@ -85,6 +87,7 @@ impl Behavior {
             last_known_ball_position: point![0.0, 0.0],
             active_since: None,
             previous_role: Role::Searcher,
+            current_turning_direction: None,
         })
     }
 
@@ -284,6 +287,7 @@ impl Behavior {
                         &context.parameters.search,
                         &mut context.path_obstacles_output,
                         self.previous_role,
+                        &mut self.current_turning_direction,
                     ),
                     Action::SearchForLostBall => lost_ball::execute(
                         world_state,

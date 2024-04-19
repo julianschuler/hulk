@@ -4,6 +4,7 @@ use color_eyre::Result;
 use context_attribute::context;
 use coordinate_systems::{Field, Ground};
 use framework::{AdditionalOutput, MainOutput};
+use geometry::direction::Direction;
 use linear_algebra::{point, Isometry2, Point2};
 use nalgebra::{clamp, DMatrix};
 use serde::{Deserialize, Serialize};
@@ -38,7 +39,7 @@ pub struct CycleContext {
 #[derive(Default)]
 pub struct MainOutputs {
     pub suggested_search_position: MainOutput<Option<Point2<Field>>>,
-    pub heatmap_center_of_mass: MainOutput<Point2<Field>>,
+    pub suggested_search_direction: MainOutput<Direction>,
 }
 
 impl SearchSuggestor {
@@ -74,11 +75,21 @@ impl SearchSuggestor {
             .heatmap
             .fill_if_subscribed(|| self.heatmap.map.clone());
 
-        let heatmap_center_of_mass = self.heatmap.get_center_of_mass();
+        let center_of_mass = self.heatmap.get_center_of_mass();
+
+        let suggested_search_direction = if let Some(ground_to_field) = context.ground_to_field {
+            if (ground_to_field.inverse() * center_of_mass).y() >= 0.0 {
+                Direction::Counterclockwise
+            } else {
+                Direction::Clockwise
+            }
+        } else {
+            Direction::Clockwise
+        };
 
         Ok(MainOutputs {
             suggested_search_position: suggested_search_position.into(),
-            heatmap_center_of_mass: heatmap_center_of_mass.into(),
+            suggested_search_direction: suggested_search_direction.into(),
         })
     }
 
