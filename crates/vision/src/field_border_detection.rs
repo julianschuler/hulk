@@ -113,6 +113,7 @@ fn find_border_lines(
     let result = ransac.next_line(
         random_state,
         20,
+        1.0,
         first_line_association_distance,
         first_line_association_distance,
     );
@@ -124,6 +125,7 @@ fn find_border_lines(
     let result = ransac.next_line(
         random_state,
         20,
+        1.0,
         second_line_association_distance,
         second_line_association_distance,
     );

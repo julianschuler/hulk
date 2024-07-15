@@ -24,6 +24,7 @@ impl<Frame> Ransac<Frame> {
         &mut self,
         random_number_generator: &mut impl Rng,
         iterations: usize,
+        scoring_exponent: f32,
         maximum_score_distance: f32,
         maximum_inclusion_distance: f32,
     ) -> RansacResult<Frame> {
@@ -49,7 +50,10 @@ impl<Frame> Ransac<Frame> {
                     .filter(|&point| {
                         line.squared_distance_to_point(*point) <= maximum_score_distance_squared
                     })
-                    .map(|point| 1.0 - line.distance_to_point(*point) / maximum_score_distance)
+                    .map(|point| {
+                        (1.0 - line.distance_to_point(*point) / maximum_score_distance)
+                            .powf(scoring_exponent)
+                    })
                     .sum();
                 (line, score)
             })
@@ -84,7 +88,7 @@ mod test {
         let mut ransac = Ransac::<SomeFrame>::new(vec![]);
         let mut rng = ChaChaRng::from_entropy();
         assert_eq!(
-            ransac.next_line(&mut rng, 10, 5.0, 5.0),
+            ransac.next_line(&mut rng, 10, 1.0, 5.0, 5.0),
             RansacResult::default()
         );
     }
@@ -94,7 +98,7 @@ mod test {
         let mut ransac = Ransac::<SomeFrame>::new(vec![]);
         let mut rng = ChaChaRng::from_entropy();
         assert_eq!(
-            ransac.next_line(&mut rng, 10, 5.0, 5.0),
+            ransac.next_line(&mut rng, 10, 1.0, 5.0, 5.0),
             RansacResult::default()
         );
     }
@@ -105,7 +109,7 @@ mod test {
         let p2 = point![30.0, 30.0];
         let mut ransac = Ransac::<SomeFrame>::new(vec![p1, p2]);
         let mut rng = ChaChaRng::from_entropy();
-        let RansacResult { line, used_points } = ransac.next_line(&mut rng, 10, 5.0, 5.0);
+        let RansacResult { line, used_points } = ransac.next_line(&mut rng, 10, 1.0, 5.0, 5.0);
         let line = line.expect("No line found");
         println!("{line:#?}");
         println!("{used_points:#?}");
@@ -125,7 +129,7 @@ mod test {
 
         let mut ransac = Ransac::<SomeFrame>::new(points.clone());
         let mut rng = ChaChaRng::from_entropy();
-        let result = ransac.next_line(&mut rng, 15, 1.0, 1.0);
+        let result = ransac.next_line(&mut rng, 15, 1.0, 1.0, 1.0);
         let line = result.line.expect("No line was found");
         assert_relative_eq!(line.slope(), slope, epsilon = 0.0001);
         assert_relative_eq!(line.y_axis_intercept(), y_intercept, epsilon = 0.0001);
