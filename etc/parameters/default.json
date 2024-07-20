@@ -7,22 +7,22 @@
     "minimum_overall_keypoint_confidence": 0.5,
     "minimum_visual_referee_keypoint_confidence": 0.8,
     "minimum_shoulder_angle": 0.2,
-    "foot_z_offset": 0.10,
+    "foot_z_offset": 0.1,
     "referee_pose_queue_length": 8,
     "minimum_number_poses_before_message": 3
   },
   "feet_detection": {
     "vision_top": {
       "enable": true,
-      "maximum_cluster_distance": 0.2,
-      "minimum_consecutive_segments": 7,
-      "minimum_luminance_standard_deviation": 7,
-      "minimum_samples_per_cluster": 8,
-      "minimum_feet_width": 0.06,
-      "minimum_segment_height": 0.15
+      "maximum_cluster_distance": 0.25,
+      "minimum_consecutive_segments": 5,
+      "minimum_luminance_standard_deviation": 5,
+      "minimum_samples_per_cluster": 5,
+      "minimum_feet_width": 0.0,
+      "minimum_segment_height": 0.08
     },
     "vision_bottom": {
-      "enable": true,
+      "enable": false,
       "maximum_cluster_distance": 0.2,
       "minimum_consecutive_segments": 7,
       "minimum_luminance_standard_deviation": 7,
@@ -87,7 +87,7 @@
     }
   },
   "foot_bumper_filter": {
-    "activations_needed": 2,
+    "activations_needed": 1,
     "acceptance_duration": { "nanos": 0, "secs": 1 },
     "buffer_size": 25,
     "number_of_detections_in_buffer_for_defective_declaration": 22,
@@ -136,12 +136,13 @@
         "start": 0.3,
         "end": 4.0
       },
+      "check_edge_types": true,
       "check_edge_gradient": true,
       "check_line_distance": true,
       "check_line_length": true,
       "check_line_segments_projection": true,
       "gradient_alignment": -0.95,
-      "gradient_sobel_stride": 1,
+      "gradient_sobel_stride": 5,
       "margin_for_point_inclusion": 0.025,
       "maximum_distance_to_robot": 6.0,
       "maximum_fit_distance_in_ground": 0.05,
@@ -162,12 +163,13 @@
         "start": 0.15,
         "end": 4.0
       },
+      "check_edge_types": true,
       "check_edge_gradient": true,
       "check_line_distance": true,
       "check_line_length": true,
       "check_line_segments_projection": true,
       "gradient_alignment": -0.95,
-      "gradient_sobel_stride": 1,
+      "gradient_sobel_stride": 5,
       "margin_for_point_inclusion": 0.025,
       "maximum_distance_to_robot": 6.0,
       "maximum_fit_distance_in_ground": 0.05,
@@ -391,7 +393,7 @@
   "step_planner": {
     "injected_step": null,
     "max_step_size": {
-      "forward": 0.055,
+      "forward": 0.045,
       "left": 0.1,
       "turn": 1.0
     },
@@ -420,17 +422,17 @@
     "base": {
       "foot_lift_apex": 0.008,
       "foot_lift_apex_increase": {
-        "forward": 0.1,
-        "left": 0.17,
+        "forward": 0.11,
+        "left": 0.12,
         "turn": 0.025
       },
-      "foot_offset_left": [0.0, 0.05, 0.0],
-      "foot_offset_right": [0.0, -0.05, 0.0],
-      "step_duration": { "nanos": 260000000, "secs": 0 },
+      "foot_offset_left": [-0.005, 0.052, 0.0],
+      "foot_offset_right": [-0.005, -0.052, 0.0],
+      "step_duration": { "nanos": 235000000, "secs": 0 },
       "step_duration_increase": {
-        "forward": 0.3,
-        "left": 0.3,
-        "turn": 0.1
+        "forward": 0.1,
+        "left": 0.03,
+        "turn": 0.0
       },
       "step_midpoint": 0.5,
       "torso_offset": 0.0,
@@ -438,7 +440,7 @@
       "walk_height": 0.22
     },
     "catching_steps": {
-      "enabled": true,
+      "enabled": false,
       "catching_step_zero_moment_point_frame_count_threshold": 5,
       "max_adjustment": 0.0,
       "midpoint": 0.5,
@@ -465,20 +467,20 @@
         "ankle_roll": 0.05
       }
     },
-    "max_level_delta": 0.1,
-    "max_rotation_speed": 5.0,
+    "max_level_delta": 10000.0,
+    "max_rotation_speed": 50000.0,
     "max_forward_acceleration": 0.01,
-    "max_inside_turn": 0.0,
+    "max_inside_turn": 0.1,
     "max_step_duration": { "nanos": 0, "secs": 2 },
     "max_support_foot_lift_speed": 0.025,
-    "min_step_duration": { "nanos": 180000000, "secs": 0 },
+    "min_step_duration": { "nanos": 100000000, "secs": 0 },
     "sole_pressure_threshold": 0.4,
     "starting_step": {
       "foot_lift_apex": 0.009,
       "step_duration": { "nanos": 200000000, "secs": 0 }
     },
     "step_midpoint": {
-      "forward": 0.38,
+      "forward": 0.45,
       "left": 0.35,
       "turn": 0.5
     },
@@ -513,8 +515,9 @@
     }
   },
   "wide_stance": {
-    "action_radius": 0.3,
-    "minimum_velocity": -0.5
+    "maximum_ball_distance": 1.5,
+    "minimum_ball_velocity": 0.6,
+    "action_radius": 0.25
   },
   "kick_steps": {
     "forward": [
@@ -997,7 +1000,8 @@
     },
     "outer_maximum_pitch": 0.0,
     "inner_maximum_pitch": 0.61,
-    "outer_yaw": 1.3
+    "outer_yaw": 1.3,
+    "injected_head_joints": null
   },
   "look_at": {
     "glance_angle": 0.25,
@@ -1051,14 +1055,16 @@
   },
   "in_walk_kicks": {
     "forward": {
-      "position": [-0.16, -0.04],
+      "position": [-0.18, -0.04],
+      "position_offset": [0.02, 0.0],
       "orientation": 0.0,
-      "reached_thresholds": [0.02, 0.01, 0.05],
+      "reached_thresholds": [0.03, 0.01, 0.05],
       "shot_distance": 4.0,
       "enabled": true
     },
     "turn": {
-      "position": [-0.145, -0.08],
+      "position": [-0.16, -0.08],
+      "position_offset": [0.02, 0.0],
       "orientation": 0.9,
       "reached_thresholds": [0.03, 0.03, 0.1],
       "shot_distance": 3.5,
@@ -1066,6 +1072,7 @@
     },
     "side": {
       "position": [-0.15, 0.03],
+      "position_offset": [0.02, 0.0],
       "orientation": -1.57,
       "reached_thresholds": [0.05, 0.06, 0.1],
       "shot_distance": 0.8,
@@ -1118,13 +1125,13 @@
       "defender_y_offset": 0.8,
       "left_midfielder_distance_to_ball": 2.5,
       "left_midfielder_maximum_x_in_ready_and_when_ball_is_not_free": -1.5,
-      "left_midfielder_minimum_x": 2.25,
+      "left_midfielder_minimum_x": 0.0,
       "right_midfielder_distance_to_ball": 2.5,
       "right_midfielder_maximum_x_in_ready_and_when_ball_is_not_free": -1.5,
-      "right_midfielder_minimum_x": 2.25,
+      "right_midfielder_minimum_x": 0.0,
       "striker_supporter_distance_to_ball": 1.2,
       "striker_supporter_maximum_x_in_ready_and_when_ball_is_not_free": -1.0,
-      "striker_supporter_minimum_x": 1.0,
+      "striker_supporter_minimum_x": -1.0,
       "keeper_x_offset": 0.1,
       "striker_distance_to_non_free_center_circle": 0.4,
       "striker_kickoff_pose": {
@@ -1141,7 +1148,7 @@
     },
     "walk_and_stand": {
       "hysteresis": [0.1, 0.1],
-      "target_reached_thresholds": [0.2, 0.5],
+      "target_reached_thresholds": [0.02, 0.05],
       "hybrid_align_distance": 1.0,
       "distance_to_be_aligned": 0.05
     },
@@ -1418,6 +1425,7 @@
   },
   "rule_obstacles": {
     "center_circle_obstacle_radius_increase": 0.2,
+    "center_circle_ballspace_free_obstacle_radius": 0.2,
     "free_kick_obstacle_radius": 0.75,
     "penaltykick_box_extension": 0.2
   },

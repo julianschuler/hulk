@@ -124,6 +124,7 @@ impl Index<KickVariant> for InWalkKicksParameters {
 )]
 pub struct InWalkKickInfoParameters {
     pub position: nalgebra::Point2<f32>,
+    pub position_offset: nalgebra::Vector2<f32>,
     pub orientation: f32,
     pub reached_thresholds: nalgebra::Vector3<f32>,
     pub shot_distance: f32,
@@ -377,8 +378,9 @@ pub struct SearchSuggestorParameters {
     Clone, Debug, Default, Deserialize, Serialize, PathSerialize, PathDeserialize, PathIntrospect,
 )]
 pub struct WideStanceParameters {
+    pub maximum_ball_distance: f32,
+    pub minimum_ball_velocity: f32,
     pub action_radius: f32,
-    pub minimum_velocity: f32,
 }
 
 #[derive(

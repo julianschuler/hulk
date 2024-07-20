@@ -6,7 +6,7 @@ use std::{
 use approx::assert_relative_eq;
 use color_eyre::{eyre::WrapErr, Result};
 use geometry::line_segment::LineSegment;
-use linear_algebra::{distance, point, vector, IntoTransform, Isometry2, Pose2};
+use linear_algebra::{distance, point, IntoTransform, Isometry2, Pose2};
 use nalgebra::{matrix, Matrix, Matrix2, Matrix3, Rotation2, Translation2, Vector2, Vector3};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use context_attribute::context;
 use coordinate_systems::{Field, Ground};
 use filtering::pose_filter::PoseFilter;
 use framework::{AdditionalOutput, HistoricInput, MainOutput, PerceptionInput};
-use spl_network_messages::{GamePhase, Penalty, PlayerNumber, Team};
+use spl_network_messages::{GamePhase, Penalty, PlayerNumber, SubState, Team};
 use types::{
     cycle_time::CycleTime,
     field_dimensions::FieldDimensions,
@@ -131,6 +131,33 @@ impl Localization {
         })
     }
 
+    fn modify_state(
+        &mut self,
+        context: &CycleContext,
+        sub_state: Option<SubState>,
+        kicking_team: Option<Team>,
+    ) {
+        if let (PlayerNumber::One, Some(SubState::PenaltyKick)) =
+            (*context.player_number, sub_state)
+        {
+            if matches!(kicking_team, Some(Team::Opponent)) {
+                self.hypotheses = self
+                    .hypotheses
+                    .iter()
+                    .map(|scored_pose| {
+                        let mut state = scored_pose.state;
+                        state.mean.x = -context.field_dimensions.length / 2.0;
+
+                        ScoredPose {
+                            state,
+                            score: scored_pose.score,
+                        }
+                    })
+                    .collect();
+            }
+        }
+    }
+
     fn reset_state(
         &mut self,
         primary_state: PrimaryState,
@@ -139,7 +166,7 @@ impl Localization {
         penalty: &Option<Penalty>,
     ) {
         match (self.last_primary_state, primary_state, game_phase) {
-            (PrimaryState::Standby, PrimaryState::Ready, _) => {
+            (PrimaryState::Standby | PrimaryState::Initial, PrimaryState::Ready, _) => {
                 let initial_pose = generate_initial_pose(
                     &context.initial_poses[*context.player_number],
                     context.field_dimensions,
@@ -276,7 +303,7 @@ impl Localization {
             .updates
             .fill_if_subscribed(|| vec![vec![]; self.hypotheses.len()]);
 
-        let line_datas = context
+        let line_data = context
             .line_data_top
             .persistent
             .iter()
@@ -284,7 +311,7 @@ impl Localization {
         for (
             (line_data_top_timestamp, line_data_top),
             (line_data_bottom_timestamp, line_data_bottom),
-        ) in line_datas
+        ) in line_data
         {
             assert_eq!(line_data_top_timestamp, line_data_bottom_timestamp);
             let current_odometry_to_last_odometry = context
@@ -512,8 +539,15 @@ impl Localization {
         let game_phase = context
             .filtered_game_controller_state
             .map(|game_controller_state| game_controller_state.game_phase);
+        let sub_state = context
+            .filtered_game_controller_state
+            .and_then(|game_controller_state| game_controller_state.sub_state);
+        let kicking_team = context
+            .filtered_game_controller_state
+            .map(|game_controller_state| game_controller_state.kicking_team);
 
         self.reset_state(primary_state, game_phase, &context, &penalty);
+        self.modify_state(&context, sub_state, kicking_team);
         self.last_primary_state = primary_state;
 
         if primary_state == PrimaryState::Penalized && !context.has_ground_contact {
@@ -1004,14 +1038,14 @@ pub fn generate_initial_pose(
 ) -> Pose2<Field> {
     match initial_pose.side {
         Side::Left => Pose2::new(
-            vector![
+            point![
                 initial_pose.center_line_offset_x,
                 field_dimensions.width * 0.5
             ],
             -FRAC_PI_2,
         ),
         Side::Right => Pose2::new(
-            vector![
+            point![
                 initial_pose.center_line_offset_x,
                 -field_dimensions.width * 0.5
             ],
@@ -1026,14 +1060,14 @@ fn generate_penalized_poses(
 ) -> Vec<Pose2<Field>> {
     vec![
         Pose2::new(
-            vector![
+            point![
                 -field_dimensions.length * 0.5 + field_dimensions.penalty_marker_distance,
                 -field_dimensions.width * 0.5 - penalized_distance
             ],
             FRAC_PI_2,
         ),
         Pose2::new(
-            vector![
+            point![
                 -field_dimensions.length * 0.5 + field_dimensions.penalty_marker_distance,
                 field_dimensions.width * 0.5 + penalized_distance
             ],

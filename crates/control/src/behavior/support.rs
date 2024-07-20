@@ -82,6 +82,7 @@ fn support_pose(
 
     let filtered_game_state = world_state
         .filtered_game_controller_state
+        .as_ref()
         .map(|filtered_game_controller_state| filtered_game_controller_state.game_state);
     let mut clamped_x = match filtered_game_state {
         Some(FilteredGameState::Ready { .. })
@@ -130,7 +131,7 @@ fn support_pose(
 
     let clamped_position = point![clamped_x, clamped_y];
     let support_pose = Pose2::new(
-        clamped_position.coords(),
+        clamped_position,
         clamped_position.look_at(&ball.ball_in_field).angle(),
     );
     Some(ground_to_field.inverse() * support_pose)

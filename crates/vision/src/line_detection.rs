@@ -1,7 +1,6 @@
 mod checks;
 mod iter_if;
 mod map_segments;
-mod segment;
 mod segment_merger;
 
 use std::{collections::HashSet, ops::Range};
@@ -24,6 +23,7 @@ use projection::{camera_matrix::CameraMatrix, Projection};
 use ransac::{Ransac, RansacResult};
 use types::{
     filtered_segments::FilteredSegments,
+    image_segments::GenericSegment,
     line_data::{LineData, LineDiscardReason},
     ycbcr422_image::YCbCr422Image,
 };
@@ -41,13 +41,15 @@ pub struct CycleContext {
     lines_in_image: AdditionalOutput<Vec<LineSegment<Pixel>>, "lines_in_image">,
     discarded_lines:
         AdditionalOutput<Vec<(LineSegment<Pixel>, LineDiscardReason)>, "discarded_lines">,
-    ransac_input: AdditionalOutput<Vec<Point2<Pixel>>, "ransac_input">,
+    filtered_segments_output:
+        AdditionalOutput<Vec<GenericSegment>, "line_detection.filtered_segments">,
 
     use_horizontal_segments:
         Parameter<bool, "line_detection.$cycler_instance.use_horizontal_segments">,
     use_vertical_segments: Parameter<bool, "line_detection.$cycler_instance.use_vertical_segments">,
     allowed_line_length_in_field:
         Parameter<Range<f32>, "line_detection.$cycler_instance.allowed_line_length_in_field">,
+    check_edge_types: Parameter<bool, "line_detection.$cycler_instance.check_edge_types">,
     check_edge_gradient: Parameter<bool, "line_detection.$cycler_instance.check_edge_gradient">,
     check_line_distance: Parameter<bool, "line_detection.$cycler_instance.check_line_distance">,
     check_line_length: Parameter<bool, "line_detection.$cycler_instance.check_line_length">,
@@ -121,7 +123,7 @@ impl LineDetection {
 
         let filtered_segments = horizontal_segments
             .chain(vertical_segments)
-            .filter(is_non_field_segment)
+            .filter(|segment| !*context.check_edge_types || is_non_field_segment(segment))
             .filter(|segment| {
                 !*context.check_line_segments_projection
                     || is_in_length_range(
@@ -138,10 +140,16 @@ impl LineDetection {
                         *context.gradient_alignment,
                         *context.gradient_sobel_stride,
                     )
-            });
+            })
+            .collect::<Vec<_>>();
+
+        context
+            .filtered_segments_output
+            .fill_if_subscribed(|| filtered_segments.clone());
 
         let (line_points, used_segments): (Vec<Point2<Ground>>, HashSet<Point2<Pixel, u16>>) =
             filtered_segments
+                .into_iter()
                 .filter_map(|segment| {
                     Some((
                         context
@@ -152,13 +160,6 @@ impl LineDetection {
                     ))
                 })
                 .unzip();
-
-        context.ransac_input.fill_if_subscribed(|| {
-            line_points
-                .iter()
-                .map(|point| context.camera_matrix.ground_to_pixel(*point).unwrap())
-                .collect()
-        });
 
         let mut ransac = Ransac::new(line_points);
         let mut lines_in_ground = Vec::new();
