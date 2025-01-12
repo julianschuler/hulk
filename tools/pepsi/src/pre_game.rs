@@ -21,7 +21,9 @@ use repository::{
     recording::configure_recording_intervals,
     upload::{get_hulk_binary, populate_upload_directory},
 };
+use serde::{de, Deserialize, Deserializer};
 use tempfile::tempdir;
+use toml::value::Datetime;
 
 use crate::{
     cargo::{self, build, cargo, environment::EnvironmentArguments, CargoCommand},
@@ -70,17 +72,27 @@ pub struct PreGameArguments {
     /// Prepare everything for the upload without performing the actual one
     #[arg(long)]
     pub prepare: bool,
-    /// The location to use for parameters
-    pub location: String,
-    /// The network to connect the wifi device to (None disconnects from anything)
-    #[arg(
-        value_parser = PossibleValuesParser::new(NETWORK_POSSIBLE_VALUES)
-            .map(|s| parse_network(&s).unwrap()))
-    ]
-    pub wifi: Network,
-    /// The NAOs to upload to with player number assignments e.g. 20w:2 or 10.1.24.22:5 (player numbers start from 1)
-    #[arg(required = true)]
-    pub assignments: Vec<NaoAddressPlayerAssignment>,
+}
+
+#[derive(Deserialize)]
+pub struct Config {
+    opponent: String,
+    date: Datetime,
+    location: String,
+    #[serde(deserialize_with = "deserialize_network")]
+    wifi: Network,
+    branches: Vec<String>,
+    assignments: Vec<NaoAddressPlayerAssignment>,
+}
+
+fn deserialize_network<'de, D, E>(deserializer: D) -> Result<Network, E>
+where
+    D: Deserializer<'de>,
+    E: de::Error + From<D::Error>,
+{
+    let network = String::deserialize(deserializer)?;
+
+    parse_network(&network).map_err(|_| E::custom("unknown network: {network}"))
 }
 
 pub async fn pre_game(arguments: Arguments, repository_root: impl AsRef<Path>) -> Result<()> {

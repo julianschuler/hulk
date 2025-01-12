@@ -11,6 +11,7 @@ use color_eyre::{
 use regex::Regex;
 
 use nao::{Network, SystemctlAction};
+use serde::Deserialize;
 use spl_network_messages::PlayerNumber;
 
 pub const SYSTEMCTL_ACTION_POSSIBLE_VALUES: &[&str] =
@@ -53,7 +54,7 @@ pub fn parse_network(network: &str) -> Result<Network> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Deserialize)]
 pub struct NaoAddress {
     pub ip: Ipv4Addr,
 }
@@ -148,7 +149,7 @@ impl TryFrom<NaoAddress> for NaoNumber {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct NaoAddressPlayerAssignment {
     pub nao_address: NaoAddress,
     pub player_number: PlayerNumber,
