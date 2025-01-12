@@ -65,7 +65,7 @@ async fn upload_with_progress(
             .get_os_version()
             .await
             .wrap_err_with(|| format!("failed to get OS version of {nao_address}"))?;
-        let expected_os_version = read_os_version(repository_root)
+        let expected_os_version = read_os_version(&repository_root)
             .await
             .wrap_err("failed to get configured OS version")?;
         if nao_os_version != expected_os_version {

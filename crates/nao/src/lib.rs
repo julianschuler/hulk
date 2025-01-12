@@ -312,9 +312,12 @@ impl Nao {
     ) -> Result<()> {
         let mut command = self.rsync_with_nao(true)?;
         command
-            .arg("--keep-dirlinks")
+            .arg("--copy-dirlinks")
             .arg("--copy-links")
             .arg("--info=progress2")
+            .arg("--exclude=.git")
+            .arg("--exclude=webots")
+            .arg("--filter=dir-merge,- .gitignore")
             .arg(format!("{}/", local_directory.as_ref().display()))
             .arg(format!(
                 "{}:{}/",
