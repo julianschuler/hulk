@@ -1,4 +1,7 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use chrono::Utc;
 use color_eyre::{eyre::WrapErr, Result};
@@ -23,6 +26,8 @@ pub struct DeployConfig {
     pub branches: Vec<Branch>,
     #[serde(deserialize_with = "deserialize_assignments")]
     pub assignments: Vec<NaoAddressPlayerAssignment>,
+    #[serde(deserialize_with = "deserialize_assignments")]
+    pub substitutions: Vec<NaoAddressPlayerAssignment>,
     pub with_communication: bool,
     pub recording_intervals: HashMap<String, usize>,
 }
@@ -57,9 +62,10 @@ impl DeployConfig {
         branch_name
     }
 
-    pub fn naos(&self) -> Vec<NaoAddress> {
+    pub fn naos(&self) -> HashSet<NaoAddress> {
         self.assignments
             .iter()
+            .chain(&self.substitutions)
             .map(|assignment| assignment.nao_address)
             .collect()
     }
