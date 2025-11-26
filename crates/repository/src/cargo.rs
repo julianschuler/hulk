@@ -135,18 +135,19 @@ impl Cargo {
                 let root = repository.current_dir_to_root()?;
                 let mut command = OsString::from(format!(
                     "\
-                    mkdir -p {cargo_home} && \
-                    docker run \
+                    mkdir -p {cargo_home}/git && \
+                    mkdir -p {cargo_home}/registry && \
+                    podman run \
                         --volume={root}:/hulk:z \
-                        --volume={cargo_home}:/root/.cargo:z \
+                        --volume={cargo_home}/git:/root/.cargo/git:z \
+                        --volume={cargo_home}/registry:/root/.cargo/registry:z \
                         --rm \
                         --interactive \
                         --tty {image} \
                         /bin/sh -c '\
                             cd {pwd} && \
-                            . /naosdk/environment-setup-corei7-64-aldebaran-linux && \
                             echo $PATH && \
-                            cargo \
+                            /root/.cargo/bin/cargo \
                     ",
                     root = root.display(),
                     pwd = pwd.display(),

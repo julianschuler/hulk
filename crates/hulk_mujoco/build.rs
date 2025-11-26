@@ -12,6 +12,9 @@ fn main() -> Result<()> {
     println!();
     println!("{}", to_string_pretty(&cyclers)?);
 
+    println!("cargo:rustc-env=ORT_LIB_LOCATION=/onnxruntime/build");
+    println!("cargo:rustc-env=BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu=--sysroot=/l4t/toolchain/aarch64--glibc--stable-2022.08-1/aarch64-buildroot-linux-gnu/sysroot");
+
     let structs = Structs::try_from_cyclers(&cyclers)?;
     generate(&cyclers, &structs, ExecutionMode::Run)
         .write_to_file("generated_code.rs")
