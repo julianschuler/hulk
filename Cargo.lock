@@ -6151,6 +6151,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mode_switcher"
+version = "0.1.0"
+dependencies = [
+ "cdr",
+ "high_level_interface",
+ "tokio",
+ "zenoh",
+]
+
+[[package]]
 name = "motion"
 version = "0.1.0"
 dependencies = [

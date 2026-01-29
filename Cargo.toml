@@ -33,6 +33,7 @@ members = [
   "crates/hungarian_algorithm",
   "crates/kinematics",
   "crates/linear_algebra",
+  "crates/mode_switcher",
   "crates/motion",
   "crates/motionfile",
   "crates/object_detection",
