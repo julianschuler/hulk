@@ -1,4 +1,4 @@
-mod mode;
+mod error;
 mod rpc;
 
-pub use crate::{mode::Mode, rpc::Request};
+pub use crate::rpc::{Mode, Request, Response};

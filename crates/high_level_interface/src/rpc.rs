@@ -1,46 +1,12 @@
+mod api_id;
+mod mode;
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::mode::Mode;
+use crate::{error::Error, rpc::api_id::ApiId};
 
-#[allow(unused)]
-#[derive(Clone, Debug)]
-enum ApiId {
-    ChangeMode = 2000,
-    Move = 2001,
-    RotateHead = 2004,
-    WaveHand = 2005,
-    RotateHeadWithDirection = 2006,
-    LieDown = 2007,
-    GetUp = 2008,
-    MoveHandEndEffector = 2009,
-    ControlGripper = 2010,
-    GetFrameTransform = 2011,
-    SwitchHandEndEffectorControlMode = 2012,
-    ControlDexterousHand = 2013,
-    Handshake = 2015,
-    Dance = 2016,
-    GetMode = 2017,
-    GetStatus = 2018,
-    PushUp = 2019,
-    PlaySound = 2020,
-    StopSound = 2021,
-    GetRobotInfo = 2022,
-    StopHandEndEffector = 2023,
-    Shoot = 2024,
-    GetUpWithMode = 2025,
-    ZeroTorqueDrag = 2026,
-    RecordTrajectory = 2027,
-    ReplayTrajectory = 2028,
-    WholeBodyDance = 2029,
-    UpperBodyCustomControl = 2030,
-    ResetOdometry = 2031,
-    LoadCustomTrainedTraj = 2032,
-    ActivateCustomTrainedTraj = 2033,
-    UnloadCustomTrainedTraj = 2034,
-    EnterWBCGait = 2035,
-    ExitWBCGait = 2036,
-}
+pub use crate::rpc::mode::Mode;
 
 #[repr(C)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -51,19 +17,24 @@ pub struct Request {
 }
 
 impl Request {
-    fn new(id: ApiId, body: impl Into<String>) -> Self {
+    fn new(api_id: ApiId, body: impl Into<String>) -> Self {
         let uuid = Uuid::new_v4().to_string();
-        let header = format!("{{\"api_id\":{id}}}", id = id as usize);
+        let header = serde_json::to_string(&RequestHeader { api_id })
+            .expect("JSON serialization should never fail");
         let body = body.into();
 
         Self { uuid, header, body }
     }
 
     pub fn change_mode(mode: Mode) -> Self {
-        Self::new(
-            ApiId::ChangeMode,
-            format!("{{\"mode\":{mode}}}", mode = mode as usize),
-        )
+        let body = serde_json::to_string(&ModeBody { mode })
+            .expect("JSON serialization should never fail");
+
+        Self::new(ApiId::ChangeMode, body)
+    }
+
+    pub fn get_mode() -> Self {
+        Self::new(ApiId::GetMode, "")
     }
 
     pub fn enter_wbc_gait() -> Self {
@@ -77,4 +48,45 @@ impl Request {
     pub fn get_up() -> Self {
         Self::new(ApiId::GetUp, "")
     }
+}
+
+#[repr(C)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Response {
+    uuid: String,
+    header: String,
+    body: String,
+}
+
+impl Response {
+    pub fn is_response_to(&self, request: &Request) -> bool {
+        self.uuid == request.uuid
+    }
+
+    pub fn status(&self) -> Result<usize, Error> {
+        let header: ResponseHeader = serde_json::from_str(&self.header)?;
+
+        Ok(header.status)
+    }
+
+    pub fn mode(&self) -> Result<Mode, Error> {
+        let body: ModeBody = serde_json::from_str(&self.body)?;
+
+        Ok(body.mode)
+    }
+}
+
+#[derive(Serialize)]
+struct RequestHeader {
+    api_id: ApiId,
+}
+
+#[derive(Deserialize)]
+struct ResponseHeader {
+    status: usize,
+}
+
+#[derive(Serialize, Deserialize)]
+struct ModeBody {
+    mode: Mode,
 }
